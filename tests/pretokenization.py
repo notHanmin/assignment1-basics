@@ -3,18 +3,20 @@ from typing import BinaryIO
 from multiprocessing import Pool
 import regex as re
 from collections import Counter
-
+import json
 
 def find_chunk_boundaries(
-    file: BinaryIO,
-    desired_num_chunks: int,
-    split_special_token: bytes,
+    file: BinaryIO, 
+    desired_num_chunks: int, 
+    split_special_token: bytes
 ) -> list[int]:
     """
     Chunk the file into parts that can be counted independently.
     May return fewer chunks if the boundaries end up overlapping.
     """
-    assert isinstance(split_special_token, bytes), "Must represent special token as a bytestring"
+    assert isinstance(split_special_token, bytes), (
+        "Must represent special token as a bytestring"
+    )
 
     # Get total file size in bytes
     file.seek(0, os.SEEK_END)
@@ -51,20 +53,6 @@ def find_chunk_boundaries(
     # Make sure all boundaries are unique, but might be fewer than desired_num_chunks
     return sorted(set(chunk_boundaries))
 
-<<<<<<< Updated upstream
-
-## Usage
-with open(..., "rb") as f:
-    num_processes = 4
-    boundaries = find_chunk_boundaries(f, num_processes, b"<|endoftext|>")
-
-    # The following is a serial implementation, but you can parallelize this
-    # by sending each start/end pair to a set of processes.
-    for start, end in zip(boundaries[:-1], boundaries[1:]):
-        f.seek(start)
-        chunk = f.read(end - start).decode("utf-8", errors="ignore")
-        # Run pre-tokenization on your chunk and store the counts for each pre-token
-=======
 PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
 
 def pretokenize(args):
@@ -109,7 +97,7 @@ def parallel_pretokenize(
     return total_counter
 
 ## Usage
-data_path = "data/TinyStoriesV2-GPT4-train.txt"
+data_path = "data/TinyStoriesV2-GPT4-valid.txt"
 num_processes = os.cpu_count()
 if num_processes is None:
     num_processes = 1
@@ -126,4 +114,25 @@ print("--- Top 10 Occurrences ---")
 for item, count in top_10_occurrences:
     item_encoded = item.encode("utf-8")
     print(f"{item_encoded}: {count}")
->>>>>>> Stashed changes
+
+with open(data_path, "rb") as f:
+    f.seek(0)
+    chunk_bytes = f.read(1000   )
+    test_string = chunk_bytes.decode("utf-8", errors="ignore")
+
+#test_string = "Héllò hôw <|endoftext|><|endoftext|> are ü? 🙃<|endoftext|>"
+special_tokens=["<|endoftext|>"]
+PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
+pre_tokenize_regex = re.compile(PAT)
+special_tokens_pattern = "(" + "|".join(re.escape(token) for token in special_tokens) + ")"
+special_tokens_regex = re.compile(special_tokens_pattern)
+
+tokenized_ids = []
+chunks = special_tokens_regex.split(test_string)
+
+print(f"Text: {test_string}")
+print(f"Chunks: {chunks}")
+print(f"Special tokens: {special_tokens}")
+vocab_filepath = "/home/minko/cs336/assignment1-basics/tests/fixtures/gpt2_vocab.json"
+with open(vocab_filepath, 'r', encoding = 'utf-8') as f:
+            gpt2_vocab = json.load(f)
