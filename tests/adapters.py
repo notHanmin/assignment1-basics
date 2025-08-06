@@ -12,7 +12,7 @@ import numpy as np
 import torch
 import json
 from torch import Tensor, nn
-from .common import gpt2_bytes_to_unicode
+from common import gpt2_bytes_to_unicode
 import math
 import einops
 
@@ -361,7 +361,7 @@ class RoPE(nn.Module):
         """
         super().__init__()
         
-        multiples = torch.arange(1, d_k, 2, device=device, dtype=torch.float32)
+        multiples = torch.arange(0, d_k, 2, device=device, dtype=torch.float32)
         exponents = multiples / d_k
         freqs = 1.0 / (theta ** exponents)
 
@@ -407,8 +407,8 @@ class RoPE(nn.Module):
         #sin_pairs = sin[..., 0::2]
 
         # Apply the rotation
-        rearranged_cos = einops.rearrange(cos, "batch_size seq_len d_model -> batch_size 1 seq_len d_model")
-        rearranged_sin = einops.rearrange(sin, "batch_size seq_len d_model -> batch_size 1 seq_len d_model")
+        rearranged_cos = einops.rearrange(cos, "batch seq_len d_model -> batch 1 seq_len d_model")
+        rearranged_sin = einops.rearrange(sin, "batch seq_len d_model -> batch 1 seq_len d_model")
         rotated_x1 = x1 * rearranged_cos - x2 * rearranged_sin
         rotated_x2 = x1 * rearranged_sin + x2 * rearranged_cos
         
